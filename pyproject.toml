@@ -1,0 +1,9 @@
+[project]
+name = "jwt_checkout"
+dependencies = [
+    "flask",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
