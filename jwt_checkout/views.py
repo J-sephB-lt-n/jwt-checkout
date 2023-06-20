@@ -19,27 +19,36 @@ def login():
     if username == "joe" and password == "secure1234":
         encoded_token = jwt.encode(
             {
-                "iss": username,
+                "iss": "my_authorization_server",
+                "sub": username,
                 "exp": (
                     datetime.datetime.now(tz=datetime.timezone.utc)
                     + datetime.timedelta(seconds=token_lifetime)
                 ),
+                "roles": ["reader", "writer", "admin"],
             },
             JWT_SECRET_KEY,
             algorithm="HS256",
         )
         decoded_token = jwt.decode(encoded_token, JWT_SECRET_KEY, algorithms=["HS256"])
-        return (
-            f"""
+        response = flask.make_response()
+        response.status_code = 200
+        response.set_cookie(
+            key="jwt_token",
+            value=encoded_token,
+            # also set secure=True if using https
+        )
+        response.response = f"""
 Correct credentials passed <br>
+JWT token saved to browser cookies <br>
 <br>
 -- system state -- <br>
 current token:                          {encoded_token} <br>
 current token (decoded):                {decoded_token} <br>
 number of seconds before token expires: {(decoded_token["exp"]-int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())):,.0f} <br>
-        """,
-            200,
-        )
+        """
+        return response
+
     return (
         f"""
 INCORRECT credentials supplied. Access denied. <br>
@@ -50,15 +59,16 @@ INCORRECT credentials supplied. Access denied. <br>
 
 @app.route("/token_status", methods=["GET"])
 def token_status():
-    token_str: str = flask.request.args.get("token")
+    encoded_token = flask.request.cookies.get("jwt_token")
     try:
-        decoded_token = jwt.decode(token_str, JWT_SECRET_KEY, algorithms=["HS256"])
+        decoded_token = jwt.decode(encoded_token, JWT_SECRET_KEY, algorithms=["HS256"])
         return (
             f"""
+JWT Token retrieved from cookies: "{encoded_token}" <br>
 Token is valid <br>
 <br>
 -- system state -- <br>
-current token:                          {token_str} <br>
+current token:                          {encoded_token} <br>
 current token (decoded):                {decoded_token} <br>
 number of seconds before token expires: {(decoded_token["exp"]-int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())):,.0f} <br>
         """,
@@ -67,7 +77,9 @@ number of seconds before token expires: {(decoded_token["exp"]-int(datetime.date
     except Exception as e:
         return (
             f"""
+JWT Token retrieved from cookies: "{encoded_token}" <br>
 Token is INVALID - access denied <br>
+
 <br>
 Token error is: "{e}"        
 """,

@@ -14,10 +14,10 @@ log in with incorrect password:
     DEPLOYED_APP_ADDESS_HERE/login?username=joe&password=incorrectpassword&lifetime=30
 
 log in with correct credentials (this will give you a JWT):
-    DEPLOYED_APP_ADDESS_HERE/login?username=joe&password=secure1234&lifetime=45
+    DEPLOYED_APP_ADDESS_HERE/login?username=joe&password=secure1234&lifetime=30
 
 check status of a given token:
-    DEPLOYED_APP_ADDESS_HERE/token_status?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJqb2UiLCJleHAiOjE2ODcyNzM4Mzd9.HKKfEuK8Orn53ZEp-uQz8AmUW-g4QAoh5fC7DxlhLUE
+    DEPLOYED_APP_ADDESS_HERE/token_status
 
 # Notes 
 
