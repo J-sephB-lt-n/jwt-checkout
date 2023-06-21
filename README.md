@@ -12,15 +12,15 @@ flask --app jwt_checkout run
 
 Then, you can interact with the deployed app using commands in your browser:
 
-**log in with incorrect password**:
+**Attempt login with incorrect password**:
     
         http://localhost:5000/login?username=joe&password=incorrectpassword&lifetime=30
 
-**log in with correct credentials (this will save a JWT to your browser cookies, with token expiration controlled by parameter 'lifetime')**:
+**Log in with correct credentials (this will save a JWT to your browser cookies, with token expiration controlled by parameter 'lifetime')**:
     
         http://localhost:5000/login?username=joe&password=secure1234&lifetime=30
 
-**check status of the current token in your browser cookies**:
+**Check status of the current token in your browser cookies**:
     
         http://localhost:5000/token_status
 
