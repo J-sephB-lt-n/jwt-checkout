@@ -11,6 +11,7 @@ JWT_SECRET_KEY = os.environ.get("SECRET_KEY", default="dev_secret_key")
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 
+# route used for logging in a user (creates a new JWT) #
 @app.route("/login", methods=["GET"])
 def login():
     username = flask.request.args.get("username")
@@ -21,6 +22,7 @@ def login():
         encoded_token = jwt.encode(
             {
                 "iss": "my_authorization_server_name",
+                "iat": datetime.datetime.now(tz=datetime.timezone.utc),
                 "sub": username,
                 "exp": (
                     datetime.datetime.now(tz=datetime.timezone.utc)
@@ -49,19 +51,26 @@ number of seconds before token expires: {(decoded_token["exp"]-int(datetime.date
         """
         return response
 
-    return (
-        f"""
-INCORRECT credentials supplied. Access denied. <br>
-""",
-        403,
-    )
+    return "INCORRECT credentials supplied. Access denied.", 403
 
 
+# route used for checking a previously created JWT #
 @app.route("/token_status", methods=["GET"])
 def token_status():
     encoded_token = flask.request.cookies.get("jwt_token")
+    if encoded_token is None:
+        return "JWT Token not in cookies <br>"
     try:
-        decoded_token = jwt.decode(encoded_token, JWT_SECRET_KEY, algorithms=["HS256"])
+        decoded_token = jwt.decode(
+            encoded_token,
+            JWT_SECRET_KEY,
+            algorithms=["HS256"],
+            issuer="my_authorization_server_name",  # any other will raise "Invalid issuer"
+            options={
+                # raise error if any of these missing from token body
+                "require": ["iss", "iat", "sub", "exp", "roles"]
+            },
+        )
         return (
             f"""
 JWT Token retrieved from cookies <br>
@@ -74,14 +83,15 @@ number of seconds before token expires: {(decoded_token["exp"]-int(datetime.date
         """,
             200,
         )
-    except Exception as e:
+    except jwt.exceptions.InvalidTokenError as err:
+        # Base exception class catching all PyJWT token-related errors
         return (
             f"""
 JWT Token retrieved from cookies <br>
 Token is invalid <br>
 ACCESS DENIED <br>
 <br>
-Token error is: "{e}"
+Token error is: "{err}"
 """,
             403,
         )
