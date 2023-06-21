@@ -1,13 +1,14 @@
 import datetime
 import flask
-import random
+import os
 import jwt
 from jwt_checkout import app
 
-JWT_SECRET_KEY = "my_precious"  # need to put this in .env or something
-app.config[
-    "SEND_FILE_MAX_AGE_DEFAULT"
-] = 0  # stop browser from caching the results of requests to this flask app
+# in production, fetch secret key from environment #
+JWT_SECRET_KEY = os.environ.get("SECRET_KEY", default="dev_secret_key")
+
+# stop browser from caching the results of requests to this flask app #
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 
 @app.route("/login", methods=["GET"])
@@ -19,7 +20,7 @@ def login():
     if username == "joe" and password == "secure1234":
         encoded_token = jwt.encode(
             {
-                "iss": "my_authorization_server",
+                "iss": "my_authorization_server_name",
                 "sub": username,
                 "exp": (
                     datetime.datetime.now(tz=datetime.timezone.utc)
@@ -40,11 +41,10 @@ def login():
         )
         response.response = f"""
 Correct credentials passed <br>
-JWT token saved to browser cookies <br>
+Saved the following JSON-Web-Token (JWT) to browser cookies: <br>
 <br>
--- system state -- <br>
-current token:                          {encoded_token} <br>
-current token (decoded):                {decoded_token} <br>
+Encoded token:                          {encoded_token} <br>
+Decoded body of token:                  {decoded_token} <br>
 number of seconds before token expires: {(decoded_token["exp"]-int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())):,.0f} <br>
         """
         return response
@@ -64,24 +64,24 @@ def token_status():
         decoded_token = jwt.decode(encoded_token, JWT_SECRET_KEY, algorithms=["HS256"])
         return (
             f"""
-JWT Token retrieved from cookies: "{encoded_token}" <br>
+JWT Token retrieved from cookies <br>
 Token is valid <br>
 <br>
--- system state -- <br>
-current token:                          {encoded_token} <br>
-current token (decoded):                {decoded_token} <br>
+Encoded token:                          {encoded_token} <br>
+Decoded body of token:                  {decoded_token} <br>
 number of seconds before token expires: {(decoded_token["exp"]-int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())):,.0f} <br>
+
         """,
             200,
         )
     except Exception as e:
         return (
             f"""
-JWT Token retrieved from cookies: "{encoded_token}" <br>
-Token is INVALID - access denied <br>
-
+JWT Token retrieved from cookies <br>
+Token is invalid <br>
+ACCESS DENIED <br>
 <br>
-Token error is: "{e}"        
+Token error is: "{e}"
 """,
             403,
         )
