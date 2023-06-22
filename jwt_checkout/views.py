@@ -40,6 +40,12 @@ def login():
             key="jwt_token",
             value=encoded_token,
             # also set secure=True if using https
+            expires=(
+                # cookie expires 1 hour after the token does
+                datetime.datetime.now(tz=datetime.timezone.utc)
+                + datetime.timedelta(seconds=token_lifetime)
+                + datetime.timedelta(hours=1)
+            ),
         )
         response.response = f"""
 Correct credentials passed <br>
