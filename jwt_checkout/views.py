@@ -4,7 +4,6 @@ import os
 import jwt
 from jwt_checkout import app
 
-# in production, fetch secret key from environment #
 JWT_SECRET_KEY = os.environ.get("SECRET_KEY", default="dev_secret_key")
 
 # stop browser from caching the results of requests to this flask app #
